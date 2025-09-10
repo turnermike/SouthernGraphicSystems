@@ -10,15 +10,15 @@ const ProductsList = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [totalProducts, setTotalProducts] = useState(0);
-  const [allProducts, setAllProducts] = useState([]); // Store all products for sorting
-  const [sortBy, setSortBy] = useState('none'); // 'none', 'rating', 'price'
-  const [sortOrder, setSortOrder] = useState('desc'); // 'asc' or 'desc'
-  const [isSorted, setIsSorted] = useState(false); // Track if we're in sorted mode
+  const [allProducts, setAllProducts] = useState([]); 
+  const [sortBy, setSortBy] = useState('none'); 
+  const [sortOrder, setSortOrder] = useState('desc'); 
+  const [isSorted, setIsSorted] = useState(false); 
   
   const observerRef = useRef(null);
   const loadingTriggerRef = useRef(null);
 
-  // Sorting function
+  
   const sortProducts = useCallback((productsToSort, sortType, order) => {
     if (sortType === 'none') return productsToSort;
     
@@ -29,7 +29,7 @@ const ProductsList = () => {
         valueA = typeof a.rating === 'number' ? a.rating : 0;
         valueB = typeof b.rating === 'number' ? b.rating : 0;
       } else if (sortType === 'price') {
-        // Use discounted price for comparison
+        
         const priceA = typeof a.price === 'number' ? a.price : 0;
         const discountA = typeof a.discountPercentage === 'number' ? a.discountPercentage : 0;
         valueA = priceA - (priceA * discountA / 100);
@@ -47,10 +47,9 @@ const ProductsList = () => {
     });
   }, []);
 
-  // Fetch all products for sorting
   const fetchAllProducts = useCallback(async () => {
     if (allProducts.length > 0) {
-      return allProducts; // Already fetched
+      return allProducts; 
     }
 
     const controller = new AbortController();
@@ -60,7 +59,6 @@ const ProductsList = () => {
       
       const timeoutId = setTimeout(() => controller.abort(), 15000);
       
-      // Fetch all products at once
       const res = await fetch(`https://dummyjson.com/products?limit=0&skip=0`, {
         signal: controller.signal,
         headers: {
@@ -100,17 +98,17 @@ const ProductsList = () => {
     }
   }, [allProducts]);
 
-  // Handle sort button clicks
+  
   const handleSort = useCallback(async (newSortBy) => {
     try {
-      // Fetch all products first if not already fetched
+      
       await fetchAllProducts();
       
       if (sortBy === newSortBy) {
-        // Toggle sort order if same sort type
+        
         setSortOrder(prev => prev === 'desc' ? 'asc' : 'desc');
       } else {
-        // Set new sort type with default desc order
+        
         setSortBy(newSortBy);
         setSortOrder('desc');
       }
@@ -121,19 +119,19 @@ const ProductsList = () => {
     }
   }, [sortBy, fetchAllProducts]);
 
-  // Clear sorting
+  
   const clearSort = useCallback(() => {
     setSortBy('none');
     setSortOrder('desc');
     setIsSorted(false);
   }, []);
 
-  // Scroll to top function
+  
   const scrollToTop = useCallback(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
-  // Get sorted products
+  
   const sortedProducts = isSorted 
     ? sortProducts(allProducts, sortBy, sortOrder)
     : sortProducts(products, sortBy, sortOrder);
@@ -149,10 +147,10 @@ const ProductsList = () => {
       }
       setError(null);
       
-      // Add timeout to prevent hanging requests
+      
       const timeoutId = setTimeout(() => controller.abort(), 10000);
       
-      // Calculate skip value (10 products per page)
+      
       const skip = page * 10;
       const limit = 10;
       
@@ -165,7 +163,7 @@ const ProductsList = () => {
       
       clearTimeout(timeoutId);
       
-      // Handle different HTTP status codes
+      
       if (!res.ok) {
         const statusMessages = {
           404: 'Products not found',
@@ -178,7 +176,7 @@ const ProductsList = () => {
       
       const data = await res.json();
       
-      // Validate response structure
+      
       if (!data || typeof data !== 'object') {
         throw new Error('Invalid response format');
       }
@@ -187,12 +185,12 @@ const ProductsList = () => {
         throw new Error('No products found in response');
       }
       
-      // Set total products count on first load
+      
       if (page === 0) {
         setTotalProducts(data.total || 0);
       }
       
-      // Validate individual products
+      
       const validProducts = data.products.filter(product => 
         product && 
         typeof product === 'object' && 
@@ -204,18 +202,18 @@ const ProductsList = () => {
         throw new Error('No valid products found');
       }
       
-      // Update products state
+      
       if (isLoadMore) {
         setProducts(prev => [...prev, ...validProducts]);
       } else {
         setProducts(validProducts);
       }
       
-      // Check if there are more products to load
+      
       const totalLoaded = (page + 1) * limit;
       setHasMore(totalLoaded < (data.total || 0));
       
-      setRetryCount(0); // Reset retry count on success
+      setRetryCount(0); 
       
     } catch (err) {
       if (err.name === 'AbortError') {
@@ -225,13 +223,13 @@ const ProductsList = () => {
         return;
       }
       
-      // Network error handling
+      
       if (!navigator.onLine) {
         setError('No internet connection. Please check your network and try again.');
         return;
       }
       
-      // Retry logic for certain errors
+      
       const retryableErrors = ['fetch', 'network', 'timeout', 'server'];
       const isRetryable = retryableErrors.some(keyword => 
         err.message.toLowerCase().includes(keyword)
@@ -241,7 +239,7 @@ const ProductsList = () => {
         setTimeout(() => {
           setRetryCount(prev => prev + 1);
           fetchProducts(page, retryAttempt + 1, isLoadMore);
-        }, 1000 * (retryAttempt + 1)); // Exponential backoff
+        }, 1000 * (retryAttempt + 1)); 
         return;
       }
       
@@ -255,14 +253,14 @@ const ProductsList = () => {
     }
   }, []);
 
-  // Initial load
+  
   useEffect(() => {
     fetchProducts(0);
   }, [fetchProducts]);
 
-  // Load more products when scrolling to bottom
+  
   const loadMore = useCallback(() => {
-    // Don't load more if we're in sorted mode (all products already loaded)
+    
     if (isSorted) return;
     
     if (!loadingMore && hasMore && !error) {
@@ -272,7 +270,7 @@ const ProductsList = () => {
     }
   }, [loadingMore, hasMore, error, currentPage, fetchProducts, isSorted]);
 
-  // Intersection Observer setup
+  
   useEffect(() => {
     const triggerElement = loadingTriggerRef.current;
     if (!triggerElement || !hasMore || loadingMore || error) return;
@@ -322,7 +320,7 @@ const ProductsList = () => {
     setSortBy('none');
     setSortOrder('desc');
     setIsSorted(false);
-    // Fetch first page
+    
     fetchProducts(0);
   };
 
@@ -351,18 +349,16 @@ const ProductsList = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
         <div className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full text-center">
-          {/* Error Icon */}
+        
           <div className="mx-auto flex items-center justify-center w-12 h-12 bg-red-100 rounded-full mb-4">
             <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
           
-          {/* Error Message */}
           <h3 className="text-lg font-medium text-gray-900 mb-2">Oops! Something went wrong</h3>
           <p className="text-sm text-gray-600 mb-6">{error}</p>
           
-          {/* Retry Button */}
           <button
             onClick={handleRetry}
             className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md transition-colors duration-200"
@@ -373,7 +369,6 @@ const ProductsList = () => {
             Try Again
           </button>
           
-          {/* Network Status */}
           {!navigator.onLine && (
             <p className="text-xs text-gray-500 mt-4">
               Please check your internet connection
@@ -387,12 +382,10 @@ const ProductsList = () => {
   return (
     <div className="min-h-screen bg-gray-50 py-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header with count and sorting */}
         <div className="mb-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
             <h1 className="text-3xl font-bold text-gray-900">Products</h1>
             
-            {/* Sorting Buttons */}
             <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => handleSort('rating')}
@@ -469,14 +462,12 @@ const ProductsList = () => {
           )}
         </div>
         
-        {/* Products Grid */}
         <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {sortedProducts.map((p) => (
             <ProductCard key={p.id} product={p} />
           ))}
         </div>
         
-        {/* Loading More Indicator */}
         {loadingMore && (
           <div className="flex items-center justify-center py-8">
             <div className="flex items-center space-x-3 text-gray-600">
@@ -489,7 +480,6 @@ const ProductsList = () => {
           </div>
         )}
         
-        {/* Intersection Observer Trigger Element */}
         {hasMore && !loadingMore && !error && !isSorted && (
           <div 
             ref={loadingTriggerRef}
@@ -504,7 +494,6 @@ const ProductsList = () => {
           </div>
         )}
         
-        {/* All Products Loaded Message */}
         {((!hasMore && products.length > 0 && !error && !isSorted) || (isSorted && sortedProducts.length > 0)) && (
           <div className="flex items-center justify-center py-12">
             <div className="bg-white rounded-lg shadow-md px-6 py-6 text-center">

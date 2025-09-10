@@ -1,7 +1,6 @@
 import React from 'react';
 
 const ProductCard = ({ product }) => {
-  // Handle missing or invalid product data
   if (!product || typeof product !== 'object') {
     return (
       <div className="bg-gray-100 rounded-lg shadow-md p-4 text-center">
@@ -24,12 +23,10 @@ const ProductCard = ({ product }) => {
     thumbnail
   } = product;
 
-  // Safely calculate discounted price
   const safePrice = typeof price === 'number' ? price : 0;
   const safeDiscount = typeof discountPercentage === 'number' ? discountPercentage : 0;
   const discountedPrice = safePrice - (safePrice * safeDiscount / 100);
   
-  // Safely handle rating
   const safeRating = typeof rating === 'number' && !isNaN(rating) ? rating : 0;
 
   return (
@@ -42,7 +39,7 @@ const ProductCard = ({ product }) => {
           className="w-full h-48 object-cover bg-gray-200"
           onError={(e) => {
             e.target.src = 'https://via.placeholder.com/300x200?text=Image+Not+Available';
-            e.target.onerror = null; // Prevent infinite loop
+          
           }}
         />
         {safeDiscount > 0 && (
